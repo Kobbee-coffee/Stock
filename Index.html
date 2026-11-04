@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>KOBBEE • นับสต็อก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --espresso:#442d1e; --roasted:#754c2c; --latte:#bca57c; --sand:#e4e1d2;
+  --cream:#fffcf4; --yellow:#f6de62; --yellow-d:#e9cb3a;
+  --ink:#2b1d13; --muted:#8a7766; --line:#ece6d6; --card:#ffffff;
+  --ok:#2f7d4f; --ok-bg:#e7f4ec; --bad:#b3402a; --bad-bg:#fbebe7; --over:#2d63a8; --over-bg:#e8f0fb;
+  --head:"Mitr","Sarabun",system-ui,-apple-system,sans-serif;--r:14px; --shadow:0 1px 2px rgba(68,45,30,.06),0 4px 16px rgba(68,45,30,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--cream);color:var(--ink);font-family:"Sarabun",system-ui,-apple-system,sans-serif;font-size:16px}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3,.head-font{font-family:var(--head);font-weight:500;margin:0}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:820px;margin:0 auto;padding:0 14px}
+
+/* top bar */
+.top{background:var(--espresso);color:var(--cream);position:sticky;top:0;z-index:20}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px}
+.brand{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0}
+.brand b{font-family:var(--head);font-weight:600;letter-spacing:.12em;font-size:20px;color:var(--yellow)}
+.brand span{font-family:var(--head);font-size:15px;opacity:.9;white-space:nowrap}
+.icon-btn{border:0;background:rgba(255,252,244,.12);color:var(--cream);height:40px;padding:0 12px;border-radius:12px;display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px}
+.icon-btn:hover{background:rgba(255,252,244,.2)}
+.icon-btn svg{width:20px;height:20px}
+
+/* branch tabs */
+.tabs{background:var(--espresso);position:sticky;top:58px;z-index:19;border-top:1px solid rgba(255,252,244,.08)}
+.tabs .wrap{display:flex;gap:8px;overflow-x:auto;padding-top:8px;padding-bottom:10px;scrollbar-width:none}
+.tabs .wrap::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid rgba(255,252,244,.25);background:transparent;color:var(--cream);padding:7px 14px;border-radius:999px;cursor:pointer;font-size:15px;white-space:nowrap}
+.tab.on{background:var(--yellow);border-color:var(--yellow);color:var(--espresso);font-weight:600}
+
+.demo{background:var(--yellow);color:var(--espresso);font-size:13.5px;text-align:center;padding:6px 10px}
+
+/* info card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.info{margin:14px 0 10px;padding:14px}
+.info-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.field input{width:100%;height:42px;border:1px solid var(--line);background:var(--cream);border-radius:10px;padding:0 12px;font-size:16px}
+.field input:focus{outline:2px solid var(--yellow);border-color:var(--yellow-d)}
+.date{font-size:13px;color:var(--muted);text-align:right;line-height:1.5}
+.date b{display:block;color:var(--ink);font-size:15px;font-weight:600}
+.progress{margin-top:12px}
+.progress .lbl{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.progress .lbl b{font-family:var(--head);font-weight:500}
+.bar{height:10px;background:var(--sand);border-radius:99px;overflow:hidden}
+.bar{display:flex}
+.bar i{display:block;height:100%;width:0;transition:width .3s}
+.bar i.s{background:var(--roasted)}
+.bar i.p{background:var(--yellow-d)}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:0}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.kpi{border:1.5px solid transparent;border-radius:10px;padding:6px 4px;text-align:center;cursor:pointer;background:#f6f3ea;color:var(--roasted)}
+.kpi b{display:block;font-family:var(--head);font-size:20px;font-weight:500;line-height:1.2}
+.kpi span{font-size:12px}
+.kpi.neg{background:var(--bad-bg);color:var(--bad)}.kpi.pos{background:var(--over-bg);color:var(--over)}.kpi.ok{background:var(--ok-bg);color:var(--ok)}.kpi.pend{background:#fff3c4;color:#7a5a00}
+.kpi.on{border-color:currentColor}
+.last{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-top:10px}
+.last span{flex:1;min-width:0}
+.refresh{border:1px solid var(--line);background:#fff;color:var(--roasted);border-radius:8px;height:30px;padding:0 10px;font-size:13px;cursor:pointer;flex:0 0 auto}
+
+/* toolbar */
+.toolbar{position:sticky;top:112px;z-index:15;background:var(--cream);padding:8px 0 8px}
+.search{position:relative}
+.search input{width:100%;height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 40px 0 40px;font-size:16px}
+.search input:focus{outline:2px solid var(--yellow);border-color:var(--yellow-d)}
+.search svg{position:absolute;left:12px;top:12px;width:20px;height:20px;color:var(--muted)}
+.search .x{position:absolute;right:6px;top:6px;width:32px;height:32px;border:0;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;display:none}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-top:8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;padding:5px 12px;border-radius:999px;font-size:14px;cursor:pointer;white-space:nowrap;color:var(--roasted)}
+.chip.on{background:var(--espresso);border-color:var(--espresso);color:var(--cream)}
+.chip .c{opacity:.7;margin-left:4px;font-size:12.5px}
+.sep{flex:0 0 1px;background:var(--line);margin:4px 2px}
+
+/* list */
+.list{padding-bottom:110px}
+.row{background:#fff;border:1px solid var(--line);border-left:4px solid var(--line);border-radius:12px;padding:10px 10px 10px 12px;margin-bottom:8px}
+.row.saved{border-left-color:var(--ok)}
+.row.pending{border-left-color:var(--yellow-d);background:#fffdf3}
+.row.err{border-left-color:var(--bad)}
+.r-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px}
+.r-head .t{flex:1;min-width:0}
+.row .nm{font-weight:600;font-size:16px;line-height:1.3;word-break:break-word}
+.row .meta{font-size:12.5px;color:var(--muted);margin-top:3px}
+.badge{flex:0 0 auto;font-size:11.5px;border-radius:999px;padding:2px 8px;white-space:nowrap;margin-top:2px}
+.badge:empty{display:none}
+.badge.saved{background:var(--ok-bg);color:var(--ok)}
+.badge.pending{background:#fff3c4;color:#7a5a00}
+.r-nums{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:6px}
+.r-nums.nosys{grid-template-columns:1fr}
+.cell{border-radius:10px;padding:5px 9px 6px;text-align:right;min-width:0;background:#f6f3ea;border:1.5px solid transparent}
+.cell label{display:block;font-size:11px;color:var(--muted);text-align:left;white-space:nowrap;pointer-events:none}
+.cell b{display:block;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}
+.cell b small{font-size:13px;color:var(--roasted);font-weight:600;margin-left:3px}
+.cell.diff.neg b small{color:var(--bad)}.cell.diff.pos b small{color:var(--over)}.cell.diff.zero b small{color:var(--ok)}
+.u-pill{display:inline-block;background:var(--yellow);color:var(--espresso);font-weight:700;font-size:13px;line-height:1;padding:4px 9px;border-radius:999px;margin-left:6px;vertical-align:1px}
+.cell.sys b{color:var(--roasted)}
+.cell.diff.neg{background:var(--bad-bg)}.cell.diff.neg b{color:var(--bad)}
+.cell.diff.pos{background:var(--over-bg)}.cell.diff.pos b{color:var(--over)}
+.cell.diff.zero{background:var(--ok-bg)}.cell.diff.zero b{color:var(--ok)}
+.cell.diff b.na,.qty .qv.ph{color:var(--latte);font-weight:400;font-size:14px}
+.qty{font:inherit;color:inherit;cursor:pointer;background:var(--cream);border-color:var(--line);width:100%}
+.qty b{font-size:19px;color:var(--ink)}
+.qty:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(246,222,98,.45)}
+.row.saved .qty{background:#fff;border-color:#bfe0cb}
+.row.pending .qty{background:#fff;border-color:var(--yellow-d)}
+.row.active{border-color:var(--yellow-d);box-shadow:0 0 0 3px rgba(246,222,98,.35)}
+.row.active .qty{border-color:var(--yellow-d);background:#fff;box-shadow:0 0 0 3px rgba(246,222,98,.45)}
+.r-note{font-size:12px;color:#7a5a00;margin-top:6px}
+.r-note:empty{display:none}
+.chg{display:grid;grid-template-columns:1fr auto;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.chg .v{font-weight:600;text-align:right;white-space:nowrap}
+.chg .tag{font-size:11.5px;border-radius:999px;padding:1px 7px;margin-left:6px;font-weight:500}
+.tag.new{background:var(--ok-bg);color:var(--ok)}.tag.edit{background:#fff3c4;color:#7a5a00}.tag.del{background:var(--bad-bg);color:var(--bad)}
+
+/* ---------- แป้นตัวเลข + เครื่องคิดเลขในตัว ---------- */
+.kp{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#efebe0;border-top:1px solid var(--line);box-shadow:0 -6px 24px rgba(68,45,30,.12);transform:translateY(105%);transition:transform .18s ease-out;padding-bottom:env(safe-area-inset-bottom)}
+.kp.show{transform:none}
+.kp-in{max-width:820px;margin:0 auto;padding:6px 8px 6px}
+.kp-top{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.kp-name{flex:1;min-width:0;font-size:12.5px;color:var(--roasted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kp-name b{color:var(--espresso);font-weight:600}
+.kp-tool{border:1px solid var(--latte);background:#fff8e0;color:var(--espresso);height:28px;border-radius:8px;padding:0 8px;font-size:12.5px;cursor:pointer;flex:0 0 auto}
+.kp-done{border:0;background:var(--espresso);color:var(--yellow);height:28px;border-radius:8px;padding:0 12px;font-size:13px;cursor:pointer;font-family:var(--head);flex:0 0 auto}
+.kp-disp{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:0 10px;height:40px;margin-bottom:5px}
+.kp-res{flex:1;min-width:0;font-size:12.5px;color:var(--roasted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.kp-res.bad{color:var(--bad)}
+.kp-expr{font-family:var(--head);font-size:22px;color:var(--espresso);white-space:nowrap;overflow-x:auto;max-width:72%;text-align:right;scrollbar-width:none}
+.kp-expr::-webkit-scrollbar{display:none}
+.kp-expr.fresh span{background:rgba(246,222,98,.6);border-radius:4px;padding:0 2px}
+.kp-expr .ph{color:var(--latte);font-size:16px}
+.kp-expr small{font-size:15px;color:var(--roasted);font-weight:700;margin-left:4px;font-family:"Sarabun",sans-serif}
+.kp-packs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-bottom:5px}
+.kp-packs::-webkit-scrollbar{display:none}
+.kp-packs:empty{display:none}
+.kp-pack{flex:0 0 auto;border:1px solid var(--latte);background:#fff;border-radius:8px;height:28px;padding:0 9px;font-size:12.5px;cursor:pointer;color:var(--espresso);white-space:nowrap}
+.kp-pack.mine{background:#fff8e0;border-color:var(--roasted)}
+.kp-keys{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.kp-keys button{height:40px;border:0;border-radius:9px;background:#fff;font-size:20px;cursor:pointer;color:var(--ink);box-shadow:0 1px 0 rgba(68,45,30,.12);font-variant-numeric:tabular-nums;touch-action:manipulation;user-select:none;-webkit-user-select:none;padding:0}
+.kp-keys button:active{background:#e6e1d3}
+.kp-keys .op{background:var(--sand);color:var(--espresso);font-weight:600}
+.kp-keys .op:active{background:#d5d0bd}
+.kp-keys .fn{background:#e4dfd0;color:var(--roasted);font-size:15px}
+.kp-keys .eq{background:var(--sand);color:var(--espresso);font-weight:600}
+.kp-keys .z{grid-column:span 2}
+.kp-keys .nx{background:var(--espresso);color:var(--yellow);font-family:var(--head);font-size:15px}
+.kp-keys .nx:active{background:#5a3d29}
+.kp-keys svg{width:22px;height:22px;vertical-align:middle}
+body.kp-open .bottom{display:none}
+body.kp-open .list{padding-bottom:calc(var(--kp-h,360px) + 24px)}
+.unit{width:44px;font-size:13px;color:var(--muted);line-height:1.15}
+.calc-btn{width:44px;height:46px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--roasted);display:grid;place-items:center;cursor:pointer}
+.calc-btn:hover{background:var(--cream)}
+.calc-btn svg{width:22px;height:22px}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+
+/* bottom bar */
+.bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(255,252,244,.96);backdrop-filter:blur(6px);border-top:1px solid var(--line);z-index:25}
+.bottom .wrap{display:flex;align-items:center;gap:12px;padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+.status{flex:1;font-size:13px;color:var(--muted);line-height:1.35}
+.status b{color:var(--ink);font-weight:600}
+.btn{border:0;border-radius:12px;height:50px;padding:0 20px;font-family:var(--head);font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--espresso);color:var(--yellow)}
+.btn-primary:disabled{opacity:.4;cursor:default}
+.btn-yellow{background:var(--yellow);color:var(--espresso)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--roasted)}
+
+/* sheet / modal */
+.overlay{position:fixed;inset:0;background:rgba(43,29,19,.45);z-index:40;display:none;align-items:flex-end;justify-content:center}
+.overlay.show{display:flex}
+.sheet{background:var(--cream);width:100%;max-width:560px;max-height:94vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:up .2s ease-out}
+@media(min-width:700px){.overlay{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(30px);opacity:.5}to{transform:none;opacity:1}}
+.sheet-h{display:flex;align-items:flex-start;gap:10px;padding:14px 16px 10px;background:var(--espresso);color:var(--cream)}
+.sheet-h .t{flex:1;min-width:0}
+.sheet-h h3{font-size:18px;color:var(--yellow)}
+.sheet-h .s{font-size:13px;opacity:.85;margin-top:2px}
+.close{border:0;background:rgba(255,252,244,.14);color:var(--cream);width:36px;height:36px;border-radius:10px;font-size:20px;cursor:pointer;flex:0 0 auto}
+.seg{display:flex;gap:4px;background:var(--espresso);padding:0 12px 12px}
+.seg button{flex:1;border:0;background:rgba(255,252,244,.1);color:var(--cream);height:38px;border-radius:10px;cursor:pointer;font-size:14.5px}
+.seg button.on{background:var(--yellow);color:var(--espresso);font-weight:600}
+.sheet-b{padding:14px 16px;overflow:auto;flex:1}
+.sheet-f{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
+.result{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:10px}
+.result .l{font-size:13px;color:var(--muted)}
+.result .v{font-family:var(--head);font-size:30px;font-weight:500;color:var(--espresso)}
+.result .v small{font-size:15px;color:var(--muted);margin-left:4px;font-family:"Sarabun",system-ui,sans-serif}
+.apply-row{display:flex;gap:8px}
+.apply-row .btn{flex:1}
+.toggle{display:flex;background:var(--sand);border-radius:10px;padding:3px;margin-bottom:10px}
+.toggle button{flex:1;border:0;background:transparent;height:34px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--roasted)}
+.toggle button.on{background:#fff;color:var(--espresso);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+.sec-t{font-size:13px;color:var(--muted);margin:0 0 6px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.preset{border:1px dashed var(--latte);background:#fff;border-radius:10px;padding:7px 10px;font-size:14px;cursor:pointer;color:var(--espresso)}
+.preset.mine{border-style:solid;border-color:var(--roasted);background:#fff8e0}
+.preset small{color:var(--muted);margin-left:2px}
+.line{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px}
+.line .lt{font-weight:600;font-size:15px}
+.line .ls{font-size:12.5px;color:var(--muted)}
+.line .ls input{width:80px;height:30px;border:1px solid var(--line);border-radius:8px;padding:0 6px;text-align:right;background:var(--cream)}
+.step{display:flex;align-items:center;gap:4px}
+.step button{width:38px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--cream);font-size:20px;cursor:pointer;color:var(--espresso)}
+.step input{width:62px;height:40px;border:1.5px solid var(--line);border-radius:10px;text-align:center;font-size:18px;font-weight:600}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 0;text-decoration:underline}
+.inrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.inrow.one{grid-template-columns:1fr}
+.box label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.box input{width:100%;height:46px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;font-size:18px;font-weight:600;text-align:right;background:#fff}
+.box input:focus,.step input:focus,.line .ls input:focus{outline:none;border-color:var(--yellow-d);box-shadow:0 0 0 3px rgba(246,222,98,.45)}
+.hint{font-size:12.5px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;line-height:1.5}
+.calc-unit{display:flex;gap:6px;margin-bottom:12px}
+
+/* calculator keypad */
+.disp{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px;text-align:right;min-height:86px}
+.disp .e{font-size:17px;color:var(--muted);word-break:break-all;min-height:24px}
+.disp .r{font-family:var(--head);font-size:34px;color:var(--espresso);word-break:break-all}
+.short{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.short button{height:38px;border:1px solid var(--latte);background:#fff8e0;border-radius:10px;font-size:13px;cursor:pointer;color:var(--espresso);line-height:1.1}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.keys button{height:56px;border:0;border-radius:14px;background:#fff;font-size:22px;cursor:pointer;box-shadow:0 1px 0 var(--line);color:var(--ink)}
+.keys button.op{background:var(--sand);color:var(--espresso);font-weight:600}
+.keys button.fn{background:#f3efe3;color:var(--roasted);font-size:18px}
+.keys button.eq{background:var(--espresso);color:var(--yellow)}
+.keys button:active{transform:scale(.97)}
+
+/* summary */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-family:var(--head);font-size:24px;font-weight:500}
+.stat span{font-size:13px}
+.s-ok{background:var(--ok-bg);color:var(--ok)}.s-bad{background:var(--bad-bg);color:var(--bad)}.s-over{background:var(--over-bg);color:var(--over)}
+.srow{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.srow .d{font-weight:700;text-align:right}
+.srow .sm{font-size:12.5px;color:var(--muted)}
+.neg{color:var(--bad)}.pos{color:var(--over)}.zero{color:var(--ok)}
+.confirm-list{font-size:15px;line-height:1.7;margin:0 0 10px}
+.warn{background:#fff6d6;border:1px solid var(--yellow-d);color:var(--espresso);border-radius:10px;padding:8px 10px;font-size:14px;margin-bottom:10px}
+
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--espresso);color:var(--cream);padding:10px 16px;border-radius:12px;font-size:14.5px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.loading{padding:60px 0;text-align:center;color:var(--muted)}
+.spin{width:28px;height:28px;border:3px solid var(--sand);border-top-color:var(--roasted);border-radius:50%;margin:0 auto 10px;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(max-height:640px){.kp-keys button{height:36px}.kp-packs{display:none}}
+@media(max-width:420px){.cell b{font-size:15.5px}.qty b{font-size:17px}.brand span{display:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><b>KOBBEE</b><span>ระบบนับสต็อก</span></div>
+    <button class="icon-btn" id="openCalc" title="เครื่องคิดเลข">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><rect x="7" y="5.5" width="10" height="4" rx="1"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>
+      เครื่องคิดเลข
+    </button>
+  </div>
+</header>
+<nav class="tabs"><div class="wrap" id="tabs"></div></nav>
+<div class="demo" id="demoBar" hidden>โหมดตัวอย่าง — ทดลองกดได้ทุกอย่าง แต่ยอดจะไม่ถูกบันทึกลง Google Sheets</div>
+
+<main class="wrap">
+  <section class="card info">
+    <div class="info-grid">
+      <div class="field">
+        <label for="counter">ชื่อผู้นับ</label>
+        <input id="counter" placeholder="เช่น น้องมายด์" autocomplete="name">
+      </div>
+      <div class="date"><span id="branchName">–</span><b id="today">–</b></div>
+    </div>
+    <div class="progress">
+      <div class="lbl"><span>นับแล้ว</span><b class="num" id="progTxt">0 / 0</b></div>
+      <div class="bar"><i class="s" id="barSaved"></i><i class="p" id="barPend"></i></div>
+      <div class="legend"><span><i style="background:var(--roasted)"></i>บันทึกแล้ว <b id="lgSaved">0</b></span><span><i style="background:var(--yellow-d)"></i>รอบันทึก <b id="lgPend">0</b></span></div>
+    </div>
+    <div class="kpis" id="kpis">
+      <button class="kpi neg" data-f="lack"><b id="kLack">0</b><span>ขาด</span></button>
+      <button class="kpi pos" data-f="over"><b id="kOver">0</b><span>เกิน</span></button>
+      <button class="kpi ok" data-f="match"><b id="kMatch">0</b><span>ตรง</span></button>
+      <button class="kpi pend" data-f="pending"><b id="kPend">0</b><span>รอบันทึก</span></button>
+    </div>
+    <div class="last"><span id="lastSave"></span><button class="refresh" id="refresh" type="button">↻ ดึงยอดล่าสุด</button></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" placeholder="ค้นหาชื่อ หรือรหัสวัตถุดิบ" autocomplete="off">
+      <button class="x" id="qx" aria-label="ล้างคำค้น">×</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <section class="list" id="list"><div class="loading"><div class="spin"></div>กำลังโหลดข้อมูล…</div></section>
+</main>
+
+<footer class="bottom">
+  <div class="wrap">
+    <div class="status" id="status">กรอกยอดนับ แล้วกด Enter เพื่อไปรายการถัดไป</div>
+    <button class="btn btn-primary" id="submitBtn" disabled>ส่งยอดนับ</button>
+  </div>
+</footer>
+
+<!-- Calculator sheet -->
+<div class="overlay" id="calcOv">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-h">
+      <div class="t"><h3 id="cTitle">เครื่องคิดเลข</h3><div class="s" id="cSub"></div></div>
+      <button class="close" data-close="calcOv" aria-label="ปิด">×</button>
+    </div>
+    <div class="seg" id="cSeg">
+      <button data-tab="pack">นับแพ็ค</button>
+      <button data-tab="weigh">ชั่งน้ำหนัก</button>
+      <button data-tab="calc">คิดเลข</button>
+    </div>
+    <div class="sheet-b" id="cBody"></div>
+    <div class="sheet-f">
+      <div class="result"><span class="l" id="cResL">ผลลัพธ์</span><span class="v num" id="cRes">0</span></div>
+      <div id="cApply"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Generic modal -->
+<div class="overlay" id="modalOv">
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-h"><div class="t"><h3 id="mTitle"></h3><div class="s" id="mSub"></div></div><button class="close" data-close="modalOv" aria-label="ปิด">×</button></div>
+    <div class="sheet-b" id="mBody"></div>
+    <div class="sheet-f" id="mFoot"></div>
+  </div>
+</div>
+
+<!-- แป้นตัวเลขในตัว (แทนคีย์บอร์ดมือถือ) -->
+<div class="kp" id="kp" aria-hidden="true">
+  <div class="kp-in">
+    <div class="kp-top">
+      <div class="kp-name" id="kpName"></div>
+      <button class="kp-tool" id="kpTool" type="button" title="นับแพ็ค / ชั่งน้ำหนัก">แพ็ค/ชั่ง</button>
+      <button class="kp-done" id="kpDone" type="button">เสร็จ</button>
+    </div>
+    <div class="kp-disp"><div class="kp-res" id="kpRes"></div><div class="kp-expr num" id="kpExpr"></div></div>
+    <div class="kp-packs" id="kpPacks"></div>
+    <div class="kp-keys" id="kpKeys">
+      <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" class="op" data-k="÷">÷</button><button type="button" class="fn" data-k="⌫" aria-label="ลบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="m12 9 6 6M18 9l-6 6"/></svg></button>
+      <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" class="op" data-k="×">×</button><button type="button" class="fn" data-k="C">ล้าง</button>
+      <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" class="op" data-k="−">−</button><button type="button" class="eq" data-k="=">=</button>
+      <button type="button" class="z" data-k="0">0</button><button type="button" data-k=".">.</button><button type="button" class="op" data-k="+">+</button><button type="button" class="nx" data-k="next">ถัดไป›</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   API: ใช้ google.script.run เมื่อเปิดจาก Apps Script, ไม่งั้นเป็นโหมดตัวอย่าง
+   ===================================================================== */
+const HAS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+const api = HAS_GAS ? {
+  call(fn, ...args) {
+    return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+  }
+} : makeDemoApi();
+
+/* ============================ helpers ============================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (n, d = 2) => (n === null || n === undefined || !isFinite(n)) ? '–' : Number(n).toLocaleString('en-US', { maximumFractionDigits: d });
+const round = (n, d = 2) => Math.round(n * 10 ** d) / 10 ** d;
+const store = {
+  get(k, def) { try { const v = localStorage.getItem(k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+function toast(msg, ms = 2200) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), ms); }
+const normKey = s => String(s || '').replace(/\s+/g, '').toLowerCase();
+
+/** ประเภทหน่วย: g = กรัม, ml = มิลลิลิตร, pc = นับเป็นชิ้น/ขวด/กล่อง ฯลฯ */
+function unitKind(u) {
+  const s = normKey(u);
+  if (/^(กรัม|ก\.?|g|gram|grams)$/.test(s)) return 'g';
+  if (/^(มิลลิลิตร|มล\.?|ml|cc)$/.test(s)) return 'ml';
+  return 'pc';
+}
+const shortUnit = u => ({ 'มิลลิลิตร': 'มล.', 'กรัม': 'ก.' }[String(u).trim()] || u || '');
+
+/** แปลงข้อความเป็นตัวเลข รองรับสูตร เช่น 2*1000+350, 3×750, (1500-120)/1.3, 10% */
+function evalExpr(input) {
+  const s = String(input).replace(/,/g, '').replace(/×|x|X/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/\s+/g, '');
+  if (!s) return null;
+  let i = 0;
+  const peek = () => s[i];
+  function num() {
+    const m = /^\d*\.?\d+(?:e[+-]?\d+)?|^\d+\.?/.exec(s.slice(i));
+    if (!m) throw new Error('bad');
+    i += m[0].length; return parseFloat(m[0]);
+  }
+  function primary() {
+    if (peek() === '(') { i++; const v = expr(); if (peek() === ')') i++; return v; }
+    return num();
+  }
+  function factor() {
+    if (peek() === '-') { i++; return -factor(); }
+    if (peek() === '+') { i++; return factor(); }
+    let v = primary();
+    while (peek() === '%') { i++; v = v / 100; }
+    return v;
+  }
+  function term() {
+    let v = factor();
+    while (peek() === '*' || peek() === '/') { const op = s[i++]; const r = factor(); v = op === '*' ? v * r : v / r; }
+    return v;
+  }
+  function expr() {
+    let v = term();
+    while (peek() === '+' || peek() === '-') { const op = s[i++]; const r = term(); v = op === '+' ? v + r : v - r; }
+    return v;
+  }
+  try { const v = expr(); if (i < s.length || !isFinite(v)) return NaN; return v; } catch (e) { return NaN; }
+}
+
+/* ============================ presets (ร้านกาแฟ) ============================ */
+const GENERIC_PACKS = {
+  g:  [{ label: 'กก.', size: 1000 }, { label: 'ถุง 500 ก.', size: 500 }, { label: 'ถุง 250 ก.', size: 250 }, { label: 'ถุง 200 ก.', size: 200 }],
+  ml: [{ label: 'ลิตร', size: 1000 }, { label: 'กล่อง 2 ลิตร', size: 2000 }, { label: 'กล่อง 1 ลิตร', size: 1000 }, { label: 'ขวดไซรัป 750 มล.', size: 750 }, { label: 'ขวด 700 มล.', size: 700 }, { label: 'ออนซ์', size: 29.57 }, { label: 'ช็อต 30 มล.', size: 30 }],
+  pc: [{ label: 'แพ็ค 6', size: 6 }, { label: 'แพ็ค 12', size: 12 }, { label: 'แถว 50', size: 50 }, { label: 'แพ็ค 100', size: 100 }, { label: 'ลัง 1,000', size: 1000 }]
+};
+const DENSITIES = [
+  { label: 'น้ำ', v: 1.00 }, { label: 'นม/นมโอ๊ต', v: 1.03 }, { label: 'ซอส', v: 1.30 },
+  { label: 'ไซรัป', v: 1.32 }, { label: 'นมข้นหวาน', v: 1.30 }, { label: 'น้ำผึ้ง', v: 1.42 }
+];
+function guessDensity(name) {
+  const n = normKey(name);
+  if (/syrup|ไซรัป/.test(n)) return 1.32;
+  if (/น้ำผึ้ง|honey/.test(n)) return 1.42;
+  if (/นมข้นหวาน/.test(n)) return 1.30;
+  if (/ซอส|sauce/.test(n)) return 1.30;
+  if (/นม|milk|oat/.test(n)) return 1.03;
+  return 1.00;
+}
+
+/* ============================ state ============================ */
+const S = {
+  branches: [], packs: {}, showSys: true,
+  branch: null, items: [], vals: {}, orig: {}, lastSave: null,
+  filter: 'all', unit: '', q: ''
+};
+const draftKey = b => 'kbc:draft:' + b;
+const isNum = v => v !== null && v !== undefined && v !== '' && isFinite(v);
+const nz = v => isNum(v) ? Number(v) : null;
+const sameNum = (a, b) => nz(a) === nz(b);
+
+/* ============================ init ============================ */
+async function init() {
+  $('#today').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  $('#counter').value = store.get('kbc:counter', '');
+  $('#counter').addEventListener('input', e => store.set('kbc:counter', e.target.value));
+  if (!HAS_GAS) $('#demoBar').hidden = false;
+  try {
+    const d = await api.call('getInitData');
+    Object.assign(S, { branches: d.branches, packs: d.packs || {}, showSys: d.showSystemQty !== false });
+    if (!S.showSys) $('#kpis').hidden = true;
+    if (!S.branches.length) { $('#list').innerHTML = '<div class="empty">ไม่พบแท็บสาขา<br>แต่ละแท็บต้องมีหัวคอลัมน์ "จำนวนนับจริง"</div>'; return; }
+    renderTabs();
+    const saved = store.get('kbc:branch', '');
+    loadBranch(S.branches.includes(saved) ? saved : S.branches[0]);
+  } catch (e) { showError(e); }
+}
+
+function renderTabs() {
+  $('#tabs').innerHTML = S.branches.map(b => `<button class="tab${b === S.branch ? ' on' : ''}" data-b="${esc(b)}">${esc(b)}</button>`).join('');
+}
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab')?.dataset.b;
+  if (b && b !== S.branch) loadBranch(b);
+});
+$('#refresh').addEventListener('click', () => { if (S.branch) loadBranch(S.branch, true); });
+
+async function loadBranch(b, keepView) {
+  if (K.open) { commitKeypad(); closeKeypad(); }
+  const sameBranch = b === S.branch;
+  S.branch = b; store.set('kbc:branch', b); renderTabs();
+  $('#branchName').textContent = b;
+  const y = window.scrollY;
+  $('#list').innerHTML = '<div class="loading"><div class="spin"></div>กำลังโหลดรายการ…</div>';
+  try {
+    const d = await api.call('getItems', b);
+    if (S.branch !== b) return;
+    S.items = sortItems(d.items); S.lastSave = d.lastSave;
+    S.orig = {}; S.vals = {};
+    d.items.forEach(it => { S.orig[it.key] = nz(it.count); S.vals[it.key] = nz(it.count); });
+    // ยอดที่กรอกไว้แต่ยังไม่บันทึก (เก็บในเครื่องนี้)
+    const draft = store.get(draftKey(b), null);
+    let restored = 0;
+    if (draft && draft.vals) for (const k in draft.vals) if (k in S.vals && !sameNum(draft.vals[k], S.orig[k])) { S.vals[k] = nz(draft.vals[k]); restored++; }
+    if (!(keepView && sameBranch)) { S.filter = 'all'; S.unit = ''; S.q = ''; $('#q').value = ''; $('#qx').style.display = 'none'; }
+    renderChips(); renderList(); updateProgress();
+    if (keepView && sameBranch) { window.scrollTo(0, y); toast('อัปเดตยอดล่าสุดจากชีทแล้ว'); }
+    else if (restored) toast(`มียอดที่ยังไม่บันทึก ${restored} รายการ (เก็บไว้ในเครื่องนี้)`, 3000);
+  } catch (e) { showError(e); }
+}
+
+function showError(e) {
+  $('#list').innerHTML = `<div class="empty">เกิดข้อผิดพลาด<br><small>${esc(e && e.message || e)}</small><br><br><button class="btn btn-ghost" onclick="location.reload()">ลองใหม่</button></div>`;
+}
+
+/* ============================ เรียง ก–ฮ อัตโนมัติ ============================ */
+// ไม่ว่าในชีทจะเรียงแบบไหน หน้านับจะเรียงตามพจนานุกรมไทย ก → ฮ เสมอ
+// (สระหน้า เ แ โ ใ ไ ไม่นับ เช่น "เนสที" อยู่หมวด น) ชื่อภาษาอังกฤษ/ตัวเลข ต่อท้าย A → Z
+const TH_COLL = new Intl.Collator('th', { sensitivity: 'base', numeric: true, ignorePunctuation: true });
+const isThai = s => /^[\u0E00-\u0E7F]/.test(String(s || '').trim());
+function sortItems(items) {
+  return items.slice().sort((a, b) => (isThai(b.name) - isThai(a.name)) || TH_COLL.compare(String(a.name).trim(), String(b.name).trim()));
+}
+
+/* ============================ สถานะของแต่ละรายการ ============================ */
+function rowState(it, preview) {
+  const val = preview !== undefined ? preview : nz(S.vals[it.key]);
+  const orig = nz(S.orig[it.key]);
+  const pending = !sameNum(S.vals[it.key], orig);
+  const counted = isNum(val);
+  const diff = counted && S.showSys && isNum(it.system) ? round(val - it.system, 3) : null;
+  return { val, orig, pending, counted, diff, saved: orig !== null && !pending };
+}
+
+function metaText(m) {
+  if (!m || !m.at) return 'บันทึกแล้ว';
+  const d = new Date(m.at), now = new Date();
+  const t = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+  const day = d.toDateString() === now.toDateString() ? '' : d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) + ' ';
+  return `${day}${t}${m.by ? ' · ' + m.by : ''}`;
+}
+
+/* ============================ list ============================ */
+const FILTERS = [['all', 'ทั้งหมด'], ['todo', 'ยังไม่นับ'], ['pending', 'รอบันทึก'], ['saved', 'บันทึกแล้ว'], ['diff', 'ไม่ตรง']];
+
+function passFilter(st, f) {
+  switch (f) {
+    case 'todo': return !st.counted;
+    case 'pending': return st.pending;
+    case 'saved': return st.saved;
+    case 'diff': return st.diff !== null && st.diff !== 0;
+    case 'lack': return st.diff !== null && st.diff < 0;
+    case 'over': return st.diff !== null && st.diff > 0;
+    case 'match': return st.diff === 0;
+    default: return true;
+  }
+}
+
+function renderChips() {
+  const units = {};
+  S.items.forEach(it => { units[it.unit] = (units[it.unit] || 0) + 1; });
+  const fl = S.showSys ? FILTERS : FILTERS.filter(f => f[0] !== 'diff');
+  $('#chips').innerHTML =
+    fl.map(([k, l]) => `<button class="chip${S.filter === k ? ' on' : ''}" data-f="${k}">${l}<span class="c"></span></button>`).join('') +
+    '<span class="sep"></span>' +
+    Object.keys(units).sort().map(u => `<button class="chip${S.unit === u ? ' on' : ''}" data-u="${esc(u)}">${esc(u || 'ไม่ระบุหน่วย')}</button>`).join('');
+  updateProgress();
+}
+function setFilter(f) {
+  S.filter = S.filter === f && f !== 'all' ? 'all' : f;
+  renderChips(); applyFilter();
+}
+$('#chips').addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  if (c.dataset.f) { setFilter(c.dataset.f); return; }
+  if (c.dataset.u !== undefined) { S.unit = S.unit === c.dataset.u ? '' : c.dataset.u; renderChips(); applyFilter(); }
+});
+$('#kpis').addEventListener('click', e => {
+  const k = e.target.closest('.kpi'); if (!k) return;
+  setFilter(k.dataset.f);
+  const top = $('#list').getBoundingClientRect().top + window.scrollY - $('.toolbar').offsetHeight - 120;
+  window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
+});
+
+function renderList() {
+  if (!S.items.length) { $('#list').innerHTML = '<div class="empty">แท็บนี้ยังไม่มีรายการวัตถุดิบ</div>'; return; }
+  $('#list').innerHTML = S.items.map((it, idx) => `
+    <div class="row" data-i="${idx}">
+      <div class="r-head">
+        <div class="t"><div class="nm">${esc(it.name)}</div><div class="meta">${esc(it.code)}<span class="u-pill">${esc(it.unit || 'ไม่ระบุหน่วย')}</span></div></div>
+        <span class="badge"></span>
+      </div>
+      <div class="r-nums${S.showSys ? '' : ' nosys'}">
+        ${S.showSys ? `<div class="cell sys"><label>คงเหลือในระบบ</label><b>${fmt(it.system, 3)}<small>${esc(shortUnit(it.unit))}</small></b></div>` : ''}
+        <button type="button" class="cell qty" aria-label="ยอดนับ ${esc(it.name)}"><label>ยอดนับจริง</label><b class="qv"></b></button>
+        ${S.showSys ? `<div class="cell diff"><label>ส่วนต่าง</label><b class="dv"></b></div>` : ''}
+      </div>
+      <div class="r-note"></div>
+    </div>`).join('') + '<div class="empty" id="noRes" hidden>ไม่พบรายการ</div>';
+  S.items.forEach((_, i) => paintRow(i));
+  applyFilter();
+}
+
+/** วาดสถานะของรายการ (ใช้ทั้งตอนบันทึก และตอนพิมพ์บนแป้นแบบสด) */
+function paintRow(idx, opt) {
+  const it = S.items[idx]; if (!it) return;
+  const row = document.querySelector(`#list .row[data-i="${idx}"]`); if (!row) return;
+  const st = rowState(it, opt ? opt.preview : undefined);
+  const u = esc(shortUnit(it.unit));
+  row.classList.toggle('saved', st.saved);
+  row.classList.toggle('pending', st.pending);
+  const qv = row.querySelector('.qv');
+  if (opt && opt.text) { qv.className = 'qv'; qv.textContent = opt.text; }
+  else if (st.counted) { qv.className = 'qv'; qv.innerHTML = `${fmt(st.val, 3)}<small>${u}</small>`; }
+  else { qv.className = 'qv ph'; qv.textContent = 'แตะเพื่อนับ'; }
+  const dc = row.querySelector('.cell.diff');
+  if (dc) {
+    const dv = dc.querySelector('.dv');
+    dc.classList.remove('neg', 'pos', 'zero');
+    if (st.diff === null) { dv.className = 'dv na'; dv.textContent = '–'; }
+    else {
+      dv.className = 'dv';
+      dc.classList.add(st.diff < 0 ? 'neg' : st.diff > 0 ? 'pos' : 'zero');
+      dv.innerHTML = st.diff === 0 ? 'ตรง ✓' : `${st.diff > 0 ? '+' : ''}${fmt(st.diff, 3)}<small>${u}</small>`;
+    }
+  }
+  const badge = row.querySelector('.badge');
+  badge.className = 'badge' + (st.pending ? ' pending' : st.saved ? ' saved' : '');
+  badge.textContent = st.pending ? 'รอบันทึก' : st.saved ? '✓ ' + metaText(it.meta) : '';
+  const note = row.querySelector('.r-note');
+  note.textContent = st.pending && st.orig !== null
+    ? (isNum(S.vals[it.key]) ? `แก้ไขจากยอดที่บันทึกไว้ ${fmt(st.orig, 3)} → ${fmt(S.vals[it.key], 3)} ${shortUnit(it.unit)}` : `จะลบยอดที่บันทึกไว้ ${fmt(st.orig, 3)} ${shortUnit(it.unit)}`)
+    : '';
+}
+
+function applyFilter() {
+  const q = normKey(S.q);
+  let shown = 0;
+  document.querySelectorAll('#list .row').forEach(r => {
+    const it = S.items[r.dataset.i];
+    let ok = passFilter(rowState(it), S.filter) && (!S.unit || it.unit === S.unit);
+    if (ok && q) ok = normKey(it.name).includes(q) || normKey(it.code).includes(q);
+    r.hidden = !ok; if (ok) shown++;
+  });
+  const nr = $('#noRes'); if (nr) nr.hidden = shown > 0;
+}
+
+$('#q').addEventListener('input', e => { S.q = e.target.value; $('#qx').style.display = S.q ? 'block' : 'none'; applyFilter(); });
+$('#qx').addEventListener('click', () => { S.q = ''; $('#q').value = ''; $('#qx').style.display = 'none'; applyFilter(); $('#q').focus(); });
+
+function setVal(key, v) {
+  S.vals[key] = nz(v);
+  const idx = S.items.findIndex(x => x.key === key);
+  const row = document.querySelector(`#list .row[data-i="${idx}"]`);
+  if (row) row.classList.remove('err');
+  paintRow(idx);
+  saveDraft(); updateProgress();
+}
+
+$('#list').addEventListener('click', e => {
+  const q = e.target.closest('.qty');
+  if (q) openKeypad(+q.closest('.row').dataset.i);
+});
+
+function changedEntries() {
+  return S.items.filter(it => !sameNum(S.vals[it.key], S.orig[it.key]))
+    .map(it => ({ key: it.key, value: nz(S.vals[it.key]) }));
+}
+
+function saveDraft() {
+  const ch = changedEntries();
+  if (!ch.length) { store.del(draftKey(S.branch)); return; }
+  const vals = {}; ch.forEach(e => vals[e.key] = e.value);
+  store.set(draftKey(S.branch), { vals, at: Date.now() });
+}
+
+function updateProgress() {
+  const total = S.items.length;
+  const c = { todo: 0, pending: 0, saved: 0, diff: 0, lack: 0, over: 0, match: 0, counted: 0 };
+  S.items.forEach(it => {
+    const st = rowState(it);
+    if (st.counted) c.counted++; else c.todo++;
+    if (st.pending) c.pending++;
+    if (st.saved) c.saved++;
+    if (st.diff !== null) { if (st.diff < 0) c.lack++; else if (st.diff > 0) c.over++; else c.match++; if (st.diff !== 0) c.diff++; }
+  });
+  const savedCounted = S.items.filter(it => { const st = rowState(it); return st.saved; }).length;
+  const pendCounted = c.counted - savedCounted;
+  $('#progTxt').textContent = `${c.counted} / ${total}`;
+  $('#barSaved').style.width = total ? (savedCounted / total * 100) + '%' : 0;
+  $('#barPend').style.width = total ? (Math.max(pendCounted, 0) / total * 100) + '%' : 0;
+  $('#lgSaved').textContent = c.saved; $('#lgPend').textContent = c.pending;
+  $('#kLack').textContent = c.lack; $('#kOver').textContent = c.over; $('#kMatch').textContent = c.match; $('#kPend').textContent = c.pending;
+  document.querySelectorAll('#kpis .kpi').forEach(k => k.classList.toggle('on', k.dataset.f === S.filter));
+  $('#submitBtn').disabled = !c.pending;
+  $('#submitBtn').textContent = c.pending ? `บันทึก (${c.pending})` : 'บันทึก';
+  $('#status').innerHTML = c.pending
+    ? `<b>รอบันทึก ${c.pending} รายการ</b><br>บันทึกเป็นช่วงๆ ได้ ยอดค้างเก็บไว้ในเครื่องนี้`
+    : (c.saved ? `บันทึกแล้ว ${c.saved} รายการ · นับต่อหรือแก้ยอดได้เลย` : 'แตะช่อง "ยอดนับจริง" เพื่อเริ่มนับ');
+  const ls = S.lastSave;
+  $('#lastSave').textContent = ls ? `บันทึกล่าสุด ${metaText(ls)}` : 'ยังไม่มีการบันทึกในรอบนี้';
+  document.querySelectorAll('#chips .chip[data-f]').forEach(ch => { const n = ch.dataset.f === 'all' ? total : c[ch.dataset.f]; ch.querySelector('.c').textContent = n; });
+}
+
+/* ============================ บันทึก (ทีละช่วงได้) ============================ */
+$('#submitBtn').addEventListener('click', () => {
+  if (K.open) { if (!commitKeypad()) return; closeKeypad(); }
+  const ch = changedEntries();
+  if (!ch.length) return;
+  const counter = $('#counter').value.trim();
+  const byKey = {}; S.items.forEach(it => byKey[it.key] = it);
+  const kinds = ch.map(e => ({ e, it: byKey[e.key], old: nz(S.orig[e.key]), type: e.value === null ? 'del' : nz(S.orig[e.key]) === null ? 'new' : 'edit' }));
+  const n = t => kinds.filter(k => k.type === t).length;
+  openModal({
+    title: 'บันทึกยอดนับ', sub: `${S.branch} · ${ch.length} รายการ`,
+    body: `
+      ${!counter ? '<div class="warn">กรุณาใส่ชื่อผู้นับก่อนบันทึก</div><div class="field" style="margin-bottom:12px"><label>ชื่อผู้นับ</label><input id="mCounter" placeholder="ชื่อผู้นับ"></div>' : `<p class="confirm-list" style="margin-bottom:4px">ผู้นับ: <b>${esc(counter)}</b></p>`}
+      <p class="sec-t">นับใหม่ ${n('new')} · แก้ไขยอดเดิม ${n('edit')}${n('del') ? ` · ลบยอด ${n('del')}` : ''}</p>
+      ${kinds.map(k => `<div class="chg"><div>${esc(k.it.name)}<span class="tag ${k.type}">${k.type === 'new' ? 'ใหม่' : k.type === 'edit' ? 'แก้ไข' : 'ลบยอด'}</span></div>
+        <div class="v">${k.type === 'new' ? fmt(k.e.value, 3) : k.type === 'edit' ? `${fmt(k.old, 3)} → ${fmt(k.e.value, 3)}` : `<s>${fmt(k.old, 3)}</s>`} <small>${esc(shortUnit(k.it.unit))}</small></div></div>`).join('')}
+      <p class="sec-t" style="margin-top:10px">ยอดที่แก้ไข/ลบ จะเขียนทับเซลล์เดิมในชีท ประวัติเก่ายังอยู่ในแท็บ _ประวัตินับ</p>`,
+    foot: `<div class="apply-row"><button class="btn btn-ghost" data-close="modalOv">กลับไปนับต่อ</button><button class="btn btn-primary" id="doSubmit">บันทึก</button></div>`
+  });
+  $('#doSubmit').onclick = async () => {
+    const name = counter || ($('#mCounter') && $('#mCounter').value.trim());
+    if (!name) { toast('กรุณาใส่ชื่อผู้นับ'); $('#mCounter')?.focus(); return; }
+    if (!counter) { $('#counter').value = name; store.set('kbc:counter', name); }
+    const btn = $('#doSubmit'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+    try {
+      const res = await api.call('saveCounts', { branch: S.branch, counter: name, entries: ch });
+      const skipped = new Set(res.skipped || []);
+      ch.forEach(e => {
+        if (skipped.has(e.key)) return;
+        S.orig[e.key] = e.value;
+        const it = byKey[e.key];
+        it.meta = e.value === null ? null : { at: res.savedAt, by: name };
+        // ถ้ามีคนแก้ยอดระหว่างนี้ ให้ใช้ค่าล่าสุดที่เพิ่งบันทึก
+      });
+      S.lastSave = { at: res.savedAt, by: name };
+      saveDraft();
+      S.items.forEach((_, i) => paintRow(i));
+      updateProgress(); applyFilter();
+      closeOv('modalOv');
+      if (skipped.size) toast('ข้ามบางรายการที่ไม่พบในชีท: ' + [...skipped].join(', '), 4000);
+      else toast(`บันทึกแล้ว ${ch.length} รายการ${n('edit') ? ` (แก้ไข ${n('edit')})` : ''} ✓`);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'บันทึก';
+      toast('บันทึกไม่สำเร็จ: ' + (e.message || e), 4000);
+    }
+  };
+});
+
+/* ============================ modal helpers ============================ */
+function openModal({ title, sub, body, foot }) {
+  $('#mTitle').textContent = title; $('#mSub').textContent = sub || '';
+  $('#mBody').innerHTML = body; $('#mFoot').innerHTML = foot || '';
+  $('#modalOv').classList.add('show');
+}
+function closeOv(id) { $('#' + id).classList.remove('show'); }
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-close]'); if (c) closeOv(c.dataset.close);
+  if (e.target.classList.contains('overlay')) e.target.classList.remove('show');
+});
+
+/* =====================================================================
+   แป้นตัวเลขในตัว: แตะช่องยอดนับ → แป้นพร้อม + − × ÷ (ไม่ใช้คีย์บอร์ดมือถือ)
+   ===================================================================== */
+const K = { open: false, idx: -1, expr: '', fresh: false };
+const OPS = '+−×÷';
+
+function openKeypad(idx) {
+  if (K.open && K.idx === idx) return;
+  if (K.open && !commitKeypad()) return;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  document.querySelectorAll('#list .row.active').forEach(r => r.classList.remove('active'));
+  const it = S.items[idx];
+  K.idx = idx;
+  K.expr = isNum(S.vals[it.key]) ? String(round(S.vals[it.key], 3)) : '';
+  K.fresh = !!K.expr;              // กดตัวเลขแรก = แทนที่ยอดเดิม (กดเครื่องหมาย = คิดต่อจากยอดเดิม)
+  K.open = true;
+  const row = document.querySelector(`#list .row[data-i="${idx}"]`);
+  row && row.classList.add('active');
+  $('#kpName').innerHTML = `<b>${esc(it.name)}</b><span class="u-pill">${esc(it.unit)}</span>`;
+  const mine = itemPacks(it).filter(p => p.size);
+  const gen = GENERIC_PACKS[unitKind(it.unit)] || [];
+  $('#kpPacks').innerHTML = mine.map(p => `<button type="button" class="kp-pack mine" data-size="${p.size}">★ ${esc(p.label || 'แพ็ค')} ×${fmt(p.size)}</button>`).join('')
+    + gen.map(p => `<button type="button" class="kp-pack" data-size="${p.size}">${esc(p.label)} ×${fmt(p.size)}</button>`).join('');
+  const kp = $('#kp');
+  kp.classList.add('show'); kp.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('kp-open');
+  document.documentElement.style.setProperty('--kp-h', kp.offsetHeight + 'px');
+  renderKeypad();
+  requestAnimationFrame(() => scrollRowIntoView(row));
+}
+
+function closeKeypad() {
+  const was = K.idx;
+  K.open = false; K.idx = -1;
+  if (was >= 0) paintRow(was);
+  const kp = $('#kp'); kp.classList.remove('show'); kp.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('kp-open');
+  document.querySelectorAll('#list .row.active').forEach(r => r.classList.remove('active'));
+}
+
+function scrollRowIntoView(row) {
+  if (!row) return;
+  const r = row.getBoundingClientRect();
+  const topLimit = $('.toolbar').getBoundingClientRect().bottom + 8;
+  const bottomLimit = window.innerHeight - $('#kp').offsetHeight - 12;
+  if (r.bottom > bottomLimit) window.scrollBy({ top: r.bottom - bottomLimit, behavior: 'smooth' });
+  else if (r.top < topLimit) window.scrollBy({ top: r.top - topLimit, behavior: 'smooth' });
+}
+
+const hasOp = e => /[+−×÷]/.test(e.replace(/^−/, ''));
+
+function renderKeypad() {
+  const it = S.items[K.idx]; if (!it) return;
+  const u = esc(shortUnit(it.unit));
+  const ex = $('#kpExpr');
+  ex.classList.toggle('fresh', K.fresh);
+  ex.innerHTML = K.expr ? `<span>${esc(K.expr)}</span><small>${hasOp(K.expr) ? '' : u}</small>` : `<span class="ph">ใส่ยอดนับ (${u})</span>`;
+  const pv = K.expr ? evalExpr(K.expr.replace(/[+−×÷.]$/, '')) : null;
+  paintRow(K.idx, { preview: (pv !== null && isFinite(pv)) ? pv : null, text: K.expr });
+  const rs = $('#kpRes');
+  rs.classList.remove('bad');
+  if (K.expr && hasOp(K.expr)) {
+    const v = evalExpr(K.expr);
+    if (v === null || !isFinite(v)) rs.textContent = '…';
+    else if (v < 0) { rs.textContent = `= ${fmt(v, 3)} (ติดลบ ใส่ไม่ได้)`; rs.classList.add('bad'); }
+    else rs.textContent = `= ${fmt(v, 3)} ${shortUnit(it.unit)}`;
+  } else rs.textContent = K.fresh ? 'ยอดเดิม · พิมพ์ใหม่=แทนที่ · กด + = บวกเพิ่ม' : '';
+}
+
+function lastNumber(e) { const m = /[\d.]*$/.exec(e); return m ? m[0] : ''; }
+
+function kpKey(k) {
+  if (!K.open) return;
+  if (k === 'next') { kpNext(); return; }
+  if (k === 'done') { if (commitKeypad()) closeKeypad(); return; }
+  if (/^[0-9]$/.test(k) || k === '.') {
+    if (K.fresh) K.expr = '';
+    K.fresh = false;
+    const ln = lastNumber(K.expr);
+    if (k === '.' && ln.includes('.')) return;
+    if (k === '.' && !ln) K.expr += '0';
+    if (/^[0-9]$/.test(k) && ln === '0') K.expr = K.expr.slice(0, -1);   // ไม่ให้ขึ้นต้นด้วย 0 ซ้ำ
+    if (ln.replace('.', '').length >= 12) return;
+    K.expr += k;
+  } else if (OPS.includes(k)) {
+    K.fresh = false;
+    if (!K.expr) return;
+    if (OPS.includes(K.expr.slice(-1)) || K.expr.slice(-1) === '.') K.expr = K.expr.slice(0, -1);
+    K.expr += k;
+  } else if (k === '⌫') {
+    K.fresh = false; K.expr = K.expr.slice(0, -1);
+  } else if (k === 'C') {
+    K.fresh = false; K.expr = '';
+  } else if (k === '=') {
+    const v = evalExpr(K.expr);
+    if (v !== null && isFinite(v)) { K.expr = String(round(v, 3)); K.fresh = false; }
+  }
+  renderKeypad();
+}
+
+/** ปุ่มขนาดบรรจุบนแป้น: พิมพ์ 3 แล้วแตะ "ขวด 750" → 3×750 */
+function kpPack(size) {
+  if (K.fresh) { K.expr = ''; K.fresh = false; }
+  const last = K.expr.slice(-1);
+  if (!K.expr || OPS.includes(last)) K.expr += String(size);
+  else K.expr += '×' + size;
+  renderKeypad();
+}
+
+function commitKeypad() {
+  if (!K.open) return true;
+  const it = S.items[K.idx];
+  const raw = K.expr.replace(/[+−×÷.]$/, '');
+  if (!raw) { setVal(it.key, null); return true; }
+  const v = evalExpr(raw);
+  if (v === null || !isFinite(v) || v < 0) {
+    toast('ตัวเลขไม่ถูกต้อง (ต้องไม่ติดลบ)');
+    document.querySelector(`#list .row[data-i="${K.idx}"]`)?.classList.add('err');
+    return false;
+  }
+  setVal(it.key, round(v, 3));
+  return true;
+}
+
+function kpNext() {
+  if (!commitKeypad()) return;
+  const rows = [...document.querySelectorAll('#list .row:not([hidden])')];
+  const i = rows.findIndex(r => +r.dataset.i === K.idx);
+  const next = rows[i + 1];
+  const cur = K.idx;
+  K.open = false;                      // ยอดถูกบันทึกแล้ว เปิดรายการถัดไปได้เลย
+  if (next) openKeypad(+next.dataset.i);
+  else { K.open = true; K.idx = cur; closeKeypad(); toast('ถึงรายการสุดท้ายแล้ว'); }
+  renderChips(); applyFilter();
+}
+
+$('#kpKeys').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) kpKey(b.dataset.k); });
+$('#kpPacks').addEventListener('click', e => { const b = e.target.closest('[data-size]'); if (b) kpPack(Number(b.dataset.size)); });
+$('#kpDone').addEventListener('click', () => kpKey('done'));
+$('#kpTool').addEventListener('click', () => {
+  const it = S.items[K.idx];
+  if (!commitKeypad()) return;
+  closeKeypad(); renderChips(); applyFilter();
+  openCalc(it);
+});
+// กันไม่ให้ปุ่มบนแป้นดึงโฟกัส/ซูมหน้าจอบนมือถือ
+$('#kp').addEventListener('mousedown', e => e.preventDefault());
+
+// แตะที่อื่นนอกแป้น = บันทึกแล้วปิดแป้น (เลื่อนหน้าจอได้โดยแป้นไม่ปิด)
+document.addEventListener('click', e => {
+  if (!K.open) return;
+  if (e.target.closest('#kp') || e.target.closest('.qty') || e.target.closest('.overlay')) return;
+  if (commitKeypad()) { closeKeypad(); renderChips(); applyFilter(); }
+}, true);
+
+// รองรับคีย์บอร์ดจริง (คอมพิวเตอร์/แท็บเล็ตที่ต่อคีย์บอร์ด)
+document.addEventListener('keydown', e => {
+  if (!K.open || $('#calcOv').classList.contains('show') || $('#modalOv').classList.contains('show')) return;
+  if (e.target.tagName === 'INPUT') return;
+  const map = { '*': '×', 'x': '×', 'X': '×', '/': '÷', '-': '−', 'Enter': 'next', 'Tab': 'next', 'Backspace': '⌫', 'Delete': 'C', 'Escape': 'done', ',': '' };
+  const k = e.key in map ? map[e.key] : e.key;
+  if (k === '') { e.preventDefault(); return; }
+  if (/^[0-9.+=]$/.test(k) || ['×', '÷', '−', '⌫', 'C', 'next', 'done'].includes(k)) { e.preventDefault(); kpKey(k); }
+});
+
+/* =====================================================================
+   เครื่องคิดเลข: นับแพ็ค / ชั่งน้ำหนัก / คิดเลขทั่วไป
+   ===================================================================== */
+const C = { item: null, tab: 'pack', kind: 'g', unit: 'กรัม', lines: [], loose: '', w: { gross: '', tare: '', n: 1, dens: 1, per: '' }, expr: '', mode: 'replace' };
+
+function itemPacks(it) {
+  if (!it) return [];
+  return (S.packs['c:' + normKey(it.code)] || []).concat(S.packs['n:' + normKey(it.name)] || []);
+}
+
+function openCalc(it) {
+  C.item = it || null;
+  C.kind = it ? unitKind(it.unit) : C.kind;
+  C.unit = it ? it.unit : ({ g: 'กรัม', ml: 'มิลลิลิตร', pc: 'ชิ้น' }[C.kind]);
+  C.lines = []; C.loose = ''; C.expr = ''; C.mode = 'replace';
+  const ps = itemPacks(it);
+  const tare = ps.find(p => p.tare)?.tare || '';
+  const dens = ps.find(p => p.density)?.density || (it ? guessDensity(it.name) : 1);
+  C.w = { gross: '', tare: tare, n: 1, dens: dens, per: '' };
+  C.tab = it ? (ps.some(p => p.size) ? 'pack' : (C.tab === 'calc' ? 'pack' : C.tab)) : 'calc';
+  if (it && isNum(S.vals[it.key])) C.cur = S.vals[it.key]; else C.cur = null;
+  $('#cTitle').textContent = it ? it.name : 'เครื่องคิดเลข';
+  $('#cSub').textContent = it ? `${it.code} · หน่วยนับ: ${it.unit}${isNum(C.cur) ? ` · ยอดเดิม ${fmt(C.cur)}` : ''}` : 'คำนวณทั่วไป และแปลงหน่วยร้านกาแฟ';
+  renderCalc();
+  $('#calcOv').classList.add('show');
+}
+$('#openCalc').addEventListener('click', () => openCalc(null));
+
+$('#cSeg').addEventListener('click', e => {
+  const t = e.target.closest('button')?.dataset.tab; if (!t) return;
+  C.tab = t; renderCalc();
+});
+
+function calcResult() {
+  if (C.tab === 'pack') {
+    const s = C.lines.reduce((a, l) => a + (Number(l.size) || 0) * (Number(l.qty) || 0), 0);
+    const lo = evalExpr(C.loose);
+    return s + (isFinite(lo) && lo !== null ? lo : 0);
+  }
+  if (C.tab === 'weigh') {
+    const g = evalExpr(C.w.gross), t = evalExpr(C.w.tare || '0'), n = Number(C.w.n) || 0;
+    if (g === null || !isFinite(g)) return null;
+    const net = g - (isFinite(t) && t !== null ? t : 0) * n;
+    if (C.kind === 'g') return net;
+    if (C.kind === 'ml') return C.w.dens > 0 ? net / C.w.dens : null;
+    const per = evalExpr(C.w.per);
+    return per > 0 ? net / per : null;
+  }
+  const v = evalExpr(C.expr);
+  return C.expr ? v : 0;
+}
+
+function renderCalc() {
+  document.querySelectorAll('#cSeg button').forEach(b => b.classList.toggle('on', b.dataset.tab === C.tab));
+  const u = shortUnit(C.unit);
+  const unitPicker = C.item ? '' : `<div class="calc-unit">${[['g', 'กรัม'], ['ml', 'มิลลิลิตร'], ['pc', 'ชิ้น']].map(([k, l]) => `<button class="chip${C.kind === k ? ' on' : ''}" data-kind="${k}" data-unit="${l}">${l}</button>`).join('')}</div>`;
+  let h = '';
+  if (C.tab === 'pack') {
+    const mine = itemPacks(C.item).filter(p => p.size);
+    h = unitPicker + `
+      <p class="sec-t">แตะขนาดบรรจุเพื่อเพิ่ม (ของเต็ม/ยังไม่เปิด)</p>
+      <div class="presets">
+        ${mine.map((p, i) => `<button class="preset mine" data-pm="${i}">★ ${esc(p.label || 'แพ็ค')} <small>${fmt(p.size)} ${esc(u)}</small></button>`).join('')}
+        ${GENERIC_PACKS[C.kind].map((p, i) => `<button class="preset" data-pg="${i}">${esc(p.label)} <small>${fmt(p.size)} ${esc(u)}</small></button>`).join('')}
+        <button class="preset" data-pc="1">+ กำหนดขนาดเอง</button>
+      </div>
+      <div id="lines">${C.lines.map((l, i) => `
+        <div class="line" data-l="${i}">
+          <div><div class="lt">${esc(l.label)}</div>
+            <div class="ls">ขนาด <input class="lsz" inputmode="decimal" value="${l.size}"> ${esc(u)} · รวม <b class="num lsub">${fmt(l.size * l.qty)}</b> <button class="del" data-del="${i}">ลบ</button></div></div>
+          <div class="step"><button data-dec="${i}">−</button><input class="lq" inputmode="decimal" value="${l.qty}"><button data-inc="${i}">+</button></div>
+        </div>`).join('')}</div>
+      <div class="inrow one"><div class="box"><label>เศษ / ของที่เปิดใช้แล้ว (${esc(u)}) — พิมพ์สูตรได้ เช่น 350+120</label><input id="loose" inputmode="decimal" value="${esc(C.loose)}" placeholder="0"></div></div>
+      ${!mine.length && C.item ? '<div class="hint">ตั้งขนาดบรรจุของรายการนี้ได้ที่แท็บ <b>_ขนาดบรรจุ</b> ในชีท แล้วจะขึ้นเป็นปุ่ม ★ ให้กดได้ทันที</div>' : ''}`;
+  } else if (C.tab === 'weigh') {
+    const tares = itemPacks(C.item).filter(p => p.tare);
+    h = unitPicker + `
+      <div class="inrow">
+        <div class="box"><label>น้ำหนักที่ชั่งได้ (กรัม)</label><input id="wg" inputmode="decimal" value="${esc(C.w.gross)}" placeholder="0"></div>
+        <div class="box"><label>น้ำหนักภาชนะเปล่า (กรัม)</label><input id="wt" inputmode="decimal" value="${esc(C.w.tare)}" placeholder="0"></div>
+      </div>
+      ${tares.length ? `<div class="presets">${tares.map(p => `<button class="preset mine" data-tare="${p.tare}">★ ${esc(p.label || 'ภาชนะ')} <small>${fmt(p.tare)} ก.</small></button>`).join('')}</div>` : ''}
+      <div class="inrow">
+        <div class="box"><label>จำนวนภาชนะที่ชั่งรวมกัน</label><input id="wn" inputmode="numeric" value="${C.w.n}"></div>
+        ${C.kind === 'ml' ? `<div class="box"><label>ความหนาแน่น (กรัม/มล.)</label><input id="wd" inputmode="decimal" value="${C.w.dens}"></div>`
+          : C.kind === 'pc' ? `<div class="box"><label>น้ำหนักต่อ 1 ${esc(C.unit || 'ชิ้น')} (กรัม)</label><input id="wp" inputmode="decimal" value="${esc(C.w.per)}" placeholder="เช่น 120/50"></div>` : '<div></div>'}
+      </div>
+      ${C.kind === 'ml' ? `<div class="presets">${DENSITIES.map(d => `<button class="preset${Math.abs(d.v - C.w.dens) < 1e-9 ? ' mine' : ''}" data-dens="${d.v}">${d.label} <small>${d.v}</small></button>`).join('')}</div>
+        <div class="hint">ของเหลวที่เปิดแล้ว ชั่งทั้งขวดแล้วหักน้ำหนักขวดเปล่า ระบบจะแปลงกรัม → มล. ให้ (ค่าความหนาแน่นเป็นค่าประมาณ ตั้งค่าเฉพาะสินค้าได้ที่แท็บ <b>_ขนาดบรรจุ</b>)</div>` : ''}
+      ${C.kind === 'pc' ? '<div class="hint">นับแก้ว/ฝา/หลอดด้วยการชั่ง: ชั่งตัวอย่าง 50 ชิ้น แล้วพิมพ์ เช่น 120/50 ในช่องน้ำหนักต่อชิ้น จะแม่นกว่าชั่งชิ้นเดียว</div>' : ''}
+      ${C.kind === 'g' ? '<div class="hint">ผง/เมล็ดที่เปิดถุงแล้ว: ชั่งทั้งถุง แล้วหักน้ำหนักถุงเปล่า</div>' : ''}`;
+  } else {
+    h = `
+      <div class="disp"><div class="e num" id="ke">${esc(C.expr) || '&nbsp;'}</div><div class="r num" id="kr">0</div></div>
+      <div class="short">
+        <button data-sh="*1000">กก.→ก.<br>ลิตร→มล.</button>
+        <button data-sh="/1000">ก.→กก.<br>มล.→ลิตร</button>
+        <button data-sh="*29.57">ออนซ์<br>→ มล.</button>
+        <button data-sh="/29.57">มล.<br>→ ออนซ์</button>
+      </div>
+      <div class="keys">
+        <button class="fn" data-k="C">C</button><button class="fn" data-k="(">(</button><button class="fn" data-k=")">)</button><button class="op" data-k="÷">÷</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="×">×</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="−">−</button>
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="+">+</button>
+        <button class="fn" data-k="⌫">⌫</button><button data-k="0">0</button><button data-k=".">.</button><button class="eq" data-k="=">=</button>
+      </div>`;
+  }
+  $('#cBody').innerHTML = h;
+  updateCalcResult();
+}
+
+function updateCalcResult() {
+  const v = calcResult();
+  const u = C.tab === 'calc' ? '' : shortUnit(C.unit);
+  $('#cResL').textContent = C.tab === 'pack' ? 'รวมทั้งหมด' : C.tab === 'weigh' ? (C.kind === 'g' ? 'น้ำหนักสุทธิ' : C.kind === 'ml' ? 'ปริมาณสุทธิ' : 'จำนวนโดยประมาณ') : 'ผลลัพธ์';
+  const ok = v !== null && isFinite(v);
+  $('#cRes').innerHTML = ok ? `${fmt(v, C.tab === 'calc' ? 6 : 2)}<small>${esc(u)}</small>` : '–';
+  if (C.tab === 'calc') { const kr = $('#kr'); if (kr) kr.textContent = ok ? fmt(v, 6) : (C.expr ? '…' : '0'); const ke = $('#ke'); if (ke) ke.innerHTML = esc(C.expr) || '&nbsp;'; }
+  if (C.tab === 'pack') document.querySelectorAll('#lines .line').forEach((el, i) => { const l = C.lines[i]; el.querySelector('.lsub').textContent = fmt(l.size * l.qty); });
+  // ปุ่มใส่ค่า
+  if (!C.item) {
+    $('#cApply').innerHTML = `<div class="apply-row"><button class="btn btn-ghost" id="cCopy"${ok ? '' : ' disabled'}>คัดลอกผลลัพธ์</button><button class="btn btn-primary" data-close="calcOv">ปิด</button></div>`;
+    const cp = $('#cCopy'); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText(String(round(v, 3))); toast('คัดลอกแล้ว'); } catch (e) {} };
+    return;
+  }
+  const hasCur = isNum(C.cur);
+  const final = ok ? (C.mode === 'add' && hasCur ? C.cur + v : v) : null;
+  const neg = final !== null && final < 0;
+  $('#cApply').innerHTML = `
+    ${hasCur ? `<div class="toggle"><button data-mode="replace" class="${C.mode === 'replace' ? 'on' : ''}">แทนที่ยอดเดิม</button><button data-mode="add" class="${C.mode === 'add' ? 'on' : ''}">บวกเพิ่มจากยอดเดิม (${fmt(C.cur)})</button></div>` : ''}
+    <button class="btn btn-yellow" id="cApplyBtn" style="width:100%"${ok && !neg ? '' : ' disabled'}>
+      ${ok ? (neg ? 'ผลลัพธ์ติดลบ ใส่ไม่ได้' : `ใส่ยอด ${fmt(final)} ${esc(shortUnit(C.item.unit))}`) : 'ใส่ตัวเลขเพื่อคำนวณ'}
+    </button>`;
+  const ab = $('#cApplyBtn');
+  if (ab && ok && !neg) ab.onclick = () => {
+    setVal(C.item.key, round(final, 3));
+    renderChips(); applyFilter();
+    closeOv('calcOv');
+    toast(`${C.item.name}: ${fmt(final)} ${shortUnit(C.item.unit)}`);
+  };
+}
+
+/* events inside calculator */
+$('#cBody').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const d = t.dataset;
+  if (d.kind) { C.kind = d.kind; C.unit = d.unit; C.lines = []; renderCalc(); return; }
+  if (d.pm !== undefined) { const p = itemPacks(C.item).filter(p => p.size)[d.pm]; addLine(p.label || 'แพ็ค', p.size); return; }
+  if (d.pg !== undefined) { const p = GENERIC_PACKS[C.kind][d.pg]; addLine(p.label, p.size); return; }
+  if (d.pc) { addLine('ขนาดกำหนดเอง', 0); setTimeout(() => { const all = document.querySelectorAll('#lines .lsz'); all[all.length - 1]?.focus(); }, 0); return; }
+  if (d.del !== undefined) { C.lines.splice(+d.del, 1); renderCalc(); return; }
+  if (d.inc !== undefined) { C.lines[d.inc].qty = round((Number(C.lines[d.inc].qty) || 0) + 1, 3); renderCalc(); return; }
+  if (d.dec !== undefined) { C.lines[d.dec].qty = Math.max(0, round((Number(C.lines[d.dec].qty) || 0) - 1, 3)); renderCalc(); return; }
+  if (d.tare) { C.w.tare = d.tare; renderCalc(); return; }
+  if (d.dens) { C.w.dens = Number(d.dens); renderCalc(); return; }
+  if (d.sh) { C.expr = C.expr ? `(${C.expr})${d.sh.replace('*', '×').replace('/', '÷')}` : ''; updateCalcResult(); return; }
+  if (d.k) { key(d.k); }
+});
+function addLine(label, size) {
+  const ex = C.lines.find(l => l.label === label && l.size === size && size);
+  if (ex) ex.qty = round(ex.qty + 1, 3); else C.lines.push({ label, size, qty: 1 });
+  renderCalc();
+}
+$('#cBody').addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'loose') C.loose = el.value;
+  else if (el.id === 'wg') C.w.gross = el.value;
+  else if (el.id === 'wt') C.w.tare = el.value;
+  else if (el.id === 'wn') C.w.n = el.value;
+  else if (el.id === 'wd') C.w.dens = Number(el.value);
+  else if (el.id === 'wp') C.w.per = el.value;
+  else if (el.classList.contains('lq')) { const i = el.closest('.line').dataset.l; const v = evalExpr(el.value); C.lines[i].qty = isFinite(v) && v !== null ? v : 0; }
+  else if (el.classList.contains('lsz')) { const i = el.closest('.line').dataset.l; const v = evalExpr(el.value); C.lines[i].size = isFinite(v) && v !== null ? v : 0; }
+  updateCalcResult();
+});
+$('#cApply').addEventListener('click', e => {
+  const m = e.target.closest('[data-mode]'); if (m) { C.mode = m.dataset.mode; updateCalcResult(); }
+});
+
+function key(k) {
+  if (k === 'C') C.expr = '';
+  else if (k === '⌫') C.expr = C.expr.slice(0, -1);
+  else if (k === '=') { const v = evalExpr(C.expr); if (isFinite(v) && v !== null) C.expr = String(round(v, 6)); }
+  else {
+    const ops = '+−×÷';
+    if (ops.includes(k) && ops.includes(C.expr.slice(-1))) C.expr = C.expr.slice(0, -1);
+    if (ops.includes(k) && !C.expr && k !== '−') return;
+    C.expr += k;
+  }
+  updateCalcResult();
+}
+document.addEventListener('keydown', e => {
+  if (!$('#calcOv').classList.contains('show')) return;
+  if (e.key === 'Escape') { closeOv('calcOv'); return; }
+  if (C.tab !== 'calc' || e.target.tagName === 'INPUT') return;
+  const map = { '*': '×', '/': '÷', '-': '−', 'Enter': '=', 'Backspace': '⌫', 'Delete': 'C', 'Escape': 'C' };
+  const k = map[e.key] || e.key;
+  if (/^[0-9.()+=]$/.test(k) || ['×', '÷', '−', '⌫', 'C'].includes(k)) { e.preventDefault(); key(k); }
+});
+
+/* =====================================================================
+   โหมดตัวอย่าง (ใช้เมื่อเปิดไฟล์นอก Apps Script)
+   ===================================================================== */
+function makeDemoApi() {
+  const RAW = [
+    ['Baker 40','B0004','ชิ้น',0],['Bakery 30','B0006','ชิ้น',0],['Bakery 35','B0005','ชิ้น',0],['Bakery 45','B0003','ชิ้น',0],['Bakery 50','B0002','ชิ้น',0],['Bakery55','Bakery55','ชิ้น',0],
+    ['Caramel Syrup','L0001','มิลลิลิตร',6155],['Cellox ทิชชู่','SKU8dfOFDu1','ชิ้น',0],['Ceremonial matcha','SKUGt6HGE4Q','กรัม',736],['Delite+ Lin','SKU2t853y5c','มิลลิลิตร',0],
+    ['Drink me','R0008','ขวด',0],['Gatorade','SKU68017T62','ขวด',0],['Himalayan Pink Salt','G0023','กรัม',0],['Milk Solution','G0017','มิลลิลิตร',6050],['Oreo','SKU5bMtjBKR','ชิ้น',0],
+    ['Pepsi','SKU6Sh226Mg','ขวด',19],['Pepsi Max','SKU1E5a127b','ขวด',0],['Premium set 1','SKU84mx0143','กล่อง',0],['Premium set 2','SKUn5244ao0','กล่อง',0],['Premium set 3','SKUk5w556S3','กล่อง',0],
+    ['Soft cake','SKU2701051z','ชิ้น',0],['Strawberry Syrup','L0002','มิลลิลิตร',3235],['Uji Matcha','G0016','กรัม',3000],['Value set','SKUV8hMenzd','ถุง',0],['Veekreme','SKU440m731r','กรัม',0],
+    ['Yuzu Syrup','L0005','มิลลิลิตร',0],['bakery 40','SKUYKAMMNOV','ชิ้น',0],['greek yogurt','SKUJb249554','ชิ้น',0],['overnight oats','SKU4s398148','ชิ้น',0],['soft cookie','SKU328gmy40','ชิ้น',0],
+    ['กาแฟ Dark Roast','G0010','กรัม',22180],['กาแฟ Medium Roast','G0015','กรัม',25162],['ขนมปังกระเทียมชีส','SKUMQS5t5TI','ชิ้น',0],['ขนมปังเล็ก 20','SKU78m293ct','ชิ้น',0],['ขนมปังไส้กรอก','SKU72063F4F','ชิ้น',0],
+    ['ครัวซอง','SKU2J0KJ613','ชิ้น',0],['ครัวซองแฮมชีส','SKUdclP4vwv','ชิ้น',0],['คัสตาร์ดเค้กคาราเมล','SKUw5540799','ชิ้น',0],['ชาไทยสูตรแดง','SKU61376798','กรัม',3428],['ชิฟฟ่อน','SKUY4KA4903','ชิ้น',0],
+    ['ชิโอปัง','SKU7569WtGL','ชิ้น',0],['ซอสคาราเมล','G0004','มิลลิลิตร',5479],['ซอสช็อคโกแลต','G0005','มิลลิลิตร',4809],['ติ่งฟง สับปะรด','SKUQnY830Qw','มิลลิลิตร',-300],['ติ่งฟง แอปเปิ้ล','SKU4266L918','มิลลิลิตร',620],
+    ['ทาร์ตไข่','SKUkxT3i626','ชิ้น',0],['ทิชชู่เปียก Molfix','SKUzHRH5470','ชิ้น',0],['ท๊อฟฟี่เค้ก','SKUX0CeXCDt','ชิ้น',0],['นม','G0003','มิลลิลิตร',28025],['นม Oat','SKUb8jruy2A','มิลลิลิตร',28610],
+    ['นมกล้วย','SKUJRq3h8dp','มิลลิลิตร',1050],['นมข้นจืด','SKU75693777','มิลลิลิตร',0],['นมข้นหวาน','G0024','มิลลิลิตร',3425],['นมโอ๊ต','SKUAYdrgZBk','มิลลิลิตร',-6840],['นำ้เปล่า Aquafina 550ml','SKUmx57807n','ขวด',53],
+    ['น้ำ','G0001','มิลลิลิตร',-242140],['น้ำตาลทราย','G0022','กรัม',6273.22],['น้ำผึ้ง','G0021','มิลลิลิตร',6610],['น้ำร้อน','G0027','มิลลิลิตร',-45150],['น้ำสละลอยแก้ว','R0004','มิลลิลิตร',0],
+    ['น้ำส้มคั้นสด','R0007','มิลลิลิตร',17520],['บราวนี่','SKU43017125','ชิ้น',0],['บลูเบอรี่ชีสพาย','SKU80i3486p','ชิ้น',0],['บลูเบอร์รี่โยเกิร์ตพาย','SKU32790847','ชิ้น',0],['บัตเตอร์เค้ก','SKU78540458','ชิ้น',0],
+    ['บุกไข่มุก','SKU1n9eB649','กรัม',2550],['บ้านลูกดาว 55','SKUPA311M89','ชิ้น',0],['บ้านลูกดาว 60','SKUYADBKmGm','ชิ้น',0],['บ้านลูกดาว 65','SKUO5mjkyg8','ชิ้น',0],['บ้านลูกดาว40','SKU00936881','ชิ้น',0],
+    ['บ้านลูกดาว45','SKU1V794625','ชิ้น',0],['บ้านลูกดาว50','SKUzMZQZh7c','ชิ้น',0],['บ้านลูกดาว75','SKU340S6I92','ชิ้น',0],['ปังกาแฟ','SKU0D6S3VI0','ชิ้น',0],['ปังทูน่า','SKU2zj97v8s','ชิ้น',0],
+    ['ปังฝอยทองครีมสด','SKUc64g3vx6','ชิ้น',0],['ปังมะพร้าวลูกเกด','SKUC3o45Z77','ชิ้น',0],['ปังเคลือบช็อค','SKU39392246','ชิ้น',0],['ปังเนยสด','SKUTGRB303H','ชิ้น',0],['ปังแฮมชีส','SKU10SR3Q82','ชิ้น',0],
+    ['ปังไก่หยอง','SKU22657521','ชิ้น',0],['ผงชานม earl grey','SKU03141457','กรัม',-184],['ผงชาใต้','G0007','กรัม',2428],['ผงชินนาม่อน','G0002','กรัม',0],['ผงช็อคโกแลต','G0009','กรัม',4216],
+    ['ผงผสมชาเขียว','G0029','กรัม',2974],['ผงมะนาว','G0008','กรัม',2775],['ผงเนสทีเลม่อน','G0006','กรัม',2664],['ผงไมโล','G0014','กรัม',0],['ฝาปิดแก้วโดม','P0006','ชิ้น',0],
+    ['ฝาแก้ว 16 oz.','P0002','ชิ้น',-34],['ฝาแก้ว 8 oz.','P0004','ชิ้น',-36],['พายสับปะรด','SKU2M34BE36','ชิ้น',0],['พิซซ่า','SKUrWe31164','ชิ้น',0],['มะพร้าวอัลมอนด์','SKUf0Whu5ze','ชิ้น',0],
+    ['ยาดม','N0002','ชิ้น',0],['ลิปตัน','SKU39361114','ขวด',0],['วิปครีม(กระป๋อง)','G0012','กรัม',-84],['สติงค์','SKUnuh0knjc','ขวด',0]
+  ];
+  const mk = () => RAW.map(r => ({ key: r[1] || r[0], name: r[0], code: r[1], unit: r[2], system: r[3], count: null }));
+  const db = { 'สาขาศาลาแดง': mk(), 'สาขาตัวอย่าง (เพิ่มแท็บใหม่)': mk().map(x => ({ ...x, system: Math.round(x.system * 0.6) })) };
+  const last = {};
+  const packs = {
+    'c:g0010': [{ label: 'ถุง 1 กก.', size: 1000 }, { label: 'ถุงเปล่า', tare: 18 }],
+    'c:g0015': [{ label: 'ถุง 1 กก.', size: 1000 }],
+    'c:g0003': [{ label: 'กล่อง 2 ลิตร', size: 2000, density: 1.03 }],
+    'c:l0001': [{ label: 'ขวด 750 มล.', size: 750, tare: 380, density: 1.32 }],
+    'c:l0002': [{ label: 'ขวด 750 มล.', size: 750, tare: 380, density: 1.32 }],
+    'c:p0002': [{ label: 'แถว 50 ชิ้น', size: 50 }, { label: 'ลัง 1,000 ชิ้น', size: 1000 }]
+  };
+  const wait = (v, ms = 250) => new Promise(r => setTimeout(() => r(JSON.parse(JSON.stringify(v))), ms));
+  return {
+    call(fn, arg) {
+      if (fn === 'getInitData') return wait({ branches: Object.keys(db), packs, showSystemQty: true });
+      if (fn === 'getItems') return wait({ branch: arg, items: db[arg], lastSave: last[arg] || null });
+      if (fn === 'saveCounts') {
+        const rows = db[arg.branch], saved = [], at = new Date().toISOString();
+        arg.entries.forEach(e => {
+          const r = rows.find(x => x.key === e.key); if (!r) return;
+          const old = r.count;
+          r.count = e.value;
+          r.meta = e.value === null ? null : { at, by: arg.counter };
+          saved.push({ key: r.key, count: e.value, old, type: e.value === null ? 'ลบยอด' : old === null ? 'นับใหม่' : 'แก้ไข' });
+        });
+        last[arg.branch] = { at, by: arg.counter };
+        return wait({ ok: true, savedAt: at, by: arg.counter, saved, skipped: [] }, 600);
+      }
+      return Promise.reject(new Error('unknown ' + fn));
+    }
+  };
+}
+
+init();
+</script>
+</body>
+</html>
