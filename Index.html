@@ -369,10 +369,27 @@ body.kp-open .list{padding-bottom:calc(var(--kp-h,360px) + 24px)}
 /* =====================================================================
    API: ใช้ google.script.run เมื่อเปิดจาก Apps Script, ไม่งั้นเป็นโหมดตัวอย่าง
    ===================================================================== */
+/* ▼▼▼ ใช้เมื่อเอาหน้านี้ไปวางนอก Apps Script (เช่น GitHub Pages) ▼▼▼
+   วางลิงก์ Web app ที่ได้จาก Apps Script (ลงท้ายด้วย /exec) ไว้ในเครื่องหมาย ' ' ด้านล่าง
+   ถ้าเปิดผ่านลิงก์ Apps Script โดยตรง ไม่ต้องใส่อะไร                                   */
+const API_URL = 'https://script.google.com/macros/s/AKfycbxPHn8iUY_avT6cqIEaIKjP_gRnegNPeTpSrc4ICSqHqiPYA5wNwF5AK0uWTa2QL9g7Jg/exec';
+/* ▲▲▲ ---------------------------------------------------------------- ▲▲▲ */
+
 const HAS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
 const api = HAS_GAS ? {
   call(fn, ...args) {
     return new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+  }
+} : API_URL ? {
+  async call(fn, ...args) {
+    let r;
+    try {
+      r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args }), redirect: 'follow' });
+    } catch (e) { throw new Error('เชื่อมต่อ Apps Script ไม่ได้ — ตรวจลิงก์ API_URL และตั้ง Who has access เป็น Anyone'); }
+    let j;
+    try { j = await r.json(); } catch (e) { throw new Error('Apps Script ไม่ได้ตอบกลับเป็นข้อมูล — ตรวจว่า Deploy เป็น New version แล้ว และ Who has access = Anyone'); }
+    if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+    return j.data;
   }
 } : makeDemoApi();
 
@@ -469,7 +486,7 @@ async function init() {
   $('#today').textContent = new Date().toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   $('#counter').value = store.get('kbc:counter', '');
   $('#counter').addEventListener('input', e => store.set('kbc:counter', e.target.value));
-  if (!HAS_GAS) $('#demoBar').hidden = false;
+  if (!HAS_GAS && !API_URL) $('#demoBar').hidden = false;
   try {
     const d = await api.call('getInitData');
     Object.assign(S, { branches: d.branches, packs: d.packs || {}, showSys: d.showSystemQty !== false });
