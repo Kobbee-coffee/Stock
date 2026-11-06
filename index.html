@@ -517,7 +517,7 @@ async function loadBranch(b, keepView) {
   try {
     const d = await api.call('getItems', b);
     if (S.branch !== b) return;
-    S.items = sortItems(d.items); S.lastSave = d.lastSave;
+    S.items = sortItems(d.items); S.lastSave = d.lastSave; S.syncedAt = new Date();
     S.orig = {}; S.vals = {};
     d.items.forEach(it => { S.orig[it.key] = nz(it.count); S.vals[it.key] = nz(it.count); });
     // ยอดที่กรอกไว้แต่ยังไม่บันทึก (เก็บในเครื่องนี้)
@@ -631,6 +631,8 @@ function paintRow(idx, opt) {
   const u = esc(shortUnit(it.unit));
   row.classList.toggle('saved', st.saved);
   row.classList.toggle('pending', st.pending);
+  const sb = row.querySelector('.cell.sys b');
+  if (sb) sb.innerHTML = `${fmt(it.system, 3)}<small>${u}</small>`;
   const qv = row.querySelector('.qv');
   if (opt && opt.text) { qv.className = 'qv'; qv.textContent = opt.text; }
   else if (st.counted) { qv.className = 'qv'; qv.innerHTML = `${fmt(st.val, 3)}<small>${u}</small>`; }
@@ -720,7 +722,8 @@ function updateProgress() {
     ? `<b>รอบันทึก ${c.pending} รายการ</b><br>บันทึกเป็นช่วงๆ ได้ ยอดค้างเก็บไว้ในเครื่องนี้`
     : (c.saved ? `บันทึกแล้ว ${c.saved} รายการ · นับต่อหรือแก้ยอดได้เลย` : 'แตะช่อง "ยอดนับจริง" เพื่อเริ่มนับ');
   const ls = S.lastSave;
-  $('#lastSave').textContent = ls ? `บันทึกล่าสุด ${metaText(ls)}` : 'ยังไม่มีการบันทึกในรอบนี้';
+  const sync = S.syncedAt ? ` · ข้อมูลล่าสุด ${S.syncedAt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : '';
+  $('#lastSave').textContent = (ls ? `บันทึกล่าสุด ${metaText(ls)}` : 'ยังไม่มีการบันทึกในรอบนี้') + sync;
   document.querySelectorAll('#chips .chip[data-f]').forEach(ch => { const n = ch.dataset.f === 'all' ? total : c[ch.dataset.f]; ch.querySelector('.c').textContent = n; });
 }
 
@@ -749,7 +752,9 @@ $('#submitBtn').addEventListener('click', () => {
     if (!counter) { $('#counter').value = name; store.set('kbc:counter', name); }
     const btn = $('#doSubmit'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
     try {
+      S.saveSeq++;
       const res = await api.call('saveCounts', { branch: S.branch, counter: name, entries: ch });
+      S.saveSeq++;
       const skipped = new Set(res.skipped || []);
       ch.forEach(e => {
         if (skipped.has(e.key)) return;
@@ -1208,6 +1213,81 @@ function makeDemoApi() {
     }
   };
 }
+
+/* =====================================================================
+   อัปเดตอัตโนมัติจาก Google Sheet
+   - ดึงยอดทุก 30 วินาที และทันทีที่กลับมาที่หน้านี้ / เน็ตกลับมา
+   - ยอดที่กำลังพิมพ์ หรือกรอกแล้วยังไม่บันทึก จะไม่ถูกทับ
+   ===================================================================== */
+const POLL_MS = 30000;
+S.saveSeq = 0;
+let pollBusy = false, pollTick = 0;
+
+async function pollSheet(force) {
+  if (pollBusy || !S.branch) return;
+  if (!force && document.hidden) return;
+  if ($('#modalOv').classList.contains('show')) return;          // กำลังยืนยันบันทึก
+  pollBusy = true;
+  const b = S.branch, seq = S.saveSeq;
+  try {
+    if (++pollTick % 4 === 0 || force) await refreshBranches();  // แท็บสาขาใหม่ / ขนาดบรรจุ
+    if (b !== S.branch) return;
+    const d = await api.call('getItems', b);
+    if (b !== S.branch || seq !== S.saveSeq) return;            // ระหว่างนี้มีการบันทึก ข้ามรอบนี้
+    mergeFromSheet(d);
+  } catch (e) { /* เน็ตหลุดชั่วคราว ลองใหม่รอบหน้า */ }
+  finally { pollBusy = false; }
+}
+
+async function refreshBranches() {
+  const d = await api.call('getInitData');
+  S.packs = d.packs || {};
+  if (JSON.stringify(d.branches) === JSON.stringify(S.branches)) return;
+  S.branches = d.branches;
+  renderTabs();
+  if (!S.branches.includes(S.branch) && S.branches.length) loadBranch(S.branches[0]);
+}
+
+function mergeFromSheet(d) {
+  const fresh = sortItems(d.items);
+  const sameShape = fresh.length === S.items.length && fresh.every((it, i) => it.key === S.items[i].key);
+  let changed = 0;
+
+  if (!sameShape) {
+    // รายการในชีทเพิ่ม/ลด/เปลี่ยน → สร้างรายการใหม่ เก็บยอดที่ยังไม่บันทึกไว้
+    if (K.open) { commitKeypad(); closeKeypad(); }
+    const keep = {};
+    S.items.forEach(it => { if (!sameNum(S.vals[it.key], S.orig[it.key])) keep[it.key] = S.vals[it.key]; });
+    S.items = fresh; S.orig = {}; S.vals = {};
+    fresh.forEach(it => { S.orig[it.key] = nz(it.count); S.vals[it.key] = it.key in keep ? nz(keep[it.key]) : nz(it.count); });
+    renderChips(); renderList();
+    toast('รายการในชีทมีการเปลี่ยนแปลง อัปเดตให้แล้ว');
+  } else {
+    fresh.forEach((nw, i) => {
+      const it = S.items[i];
+      const oldOrig = nz(S.orig[it.key]), newOrig = nz(nw.count);
+      const pending = !sameNum(S.vals[it.key], oldOrig);
+      const same = sameNum(oldOrig, newOrig) && sameNum(it.system, nw.system) && it.name === nw.name && it.unit === nw.unit &&
+        JSON.stringify(it.meta || null) === JSON.stringify(nw.meta || null);
+      if (same) return;
+      if (!sameNum(oldOrig, newOrig) || !sameNum(it.system, nw.system)) changed++;
+      if (it.name !== nw.name) { const nm = document.querySelector(`#list .row[data-i="${i}"] .nm`); if (nm) nm.textContent = nw.name; }
+      it.system = nw.system; it.meta = nw.meta; it.name = nw.name; it.unit = nw.unit;
+      S.orig[it.key] = newOrig;
+      if (!pending) S.vals[it.key] = newOrig;                    // ยอดที่ยังไม่บันทึกในเครื่องนี้ ไม่ถูกทับ
+      if (!(K.open && K.idx === i)) paintRow(i);
+    });
+    if (changed) toast(`อัปเดตจากชีท ${changed} รายการ`);
+  }
+  S.lastSave = d.lastSave || S.lastSave;
+  S.syncedAt = new Date();
+  saveDraft(); updateProgress();
+  if (changed || !sameShape) applyFilter();
+}
+
+setInterval(() => pollSheet(false), POLL_MS);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) pollSheet(true); });
+window.addEventListener('online', () => pollSheet(true));
 
 init();
 </script>
